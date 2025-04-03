@@ -15,6 +15,6 @@ public class User {
     private String username;
     private String email;
     private String password;
-    private USER_ROLE userRole;
+    private USER_ROLE userRole = USER_ROLE.ROLE_USER;
     private String avatarUrl;
 }

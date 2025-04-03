@@ -9,4 +9,5 @@ public interface UserService {
     List<User> getAllUser();
     User updateUserInfor(String userId, UpdateInforRequest updateInforRequest);
     void deleteUser(String userId);
+    User findUserByJwtToken(String jwt);
 }

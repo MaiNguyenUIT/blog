@@ -8,8 +8,9 @@ import java.util.List;
 public interface BlogService {
     List<Blog> getUserBlog(String userId);
     List<Blog> getALlBlog();
-    Blog createBlog(String userId, BlogDTO blogDTO);
-    Blog updateBlog(String userId, BlogDTO blogDTO);
+    BlogDTO createBlog(String userId, BlogDTO blogDTO);
+    BlogDTO updateBlog(String userId, String blogId, BlogDTO blogDTO);
     Blog getBlog(String blogId);
+    List<Blog> getBlogsSortedByPriority();
     void deleteBlog(String id);
 }

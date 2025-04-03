@@ -5,12 +5,15 @@ import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.model.Blog;
 import com.example.backend.model.User;
 import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.factory.Mappers;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+@Mapper
 public interface BlogMapper {
+    BlogMapper INSTANCE = Mappers.getMapper(BlogMapper.class);
 
     //Map dto to entity
     @Mapping(target = "id", ignore = true)
