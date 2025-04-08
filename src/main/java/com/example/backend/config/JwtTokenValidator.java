@@ -30,13 +30,12 @@ public class JwtTokenValidator extends OncePerRequestFilter {
                 SecretKey secretKey = Keys.hmacShaKeyFor(JwtConstant.SECRET_KEY.getBytes());
                 Claims claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(jwt).getBody();
 
-                String userName = String.valueOf(claims.get("userName"));
+                String userName = String.valueOf(claims.get("email"));
                 String authorities = String.valueOf(claims.get("authorities"));
 
                 List<GrantedAuthority> auth = AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userName, null, auth);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-
             } catch (Exception e) {
                 throw new BadCredentialsException("invalid token.....");
             }

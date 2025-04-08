@@ -8,5 +8,4 @@ import java.time.LocalDateTime;
 public class BlogDTO {
     private String title;
     private String content;
-    private int priority;
 }

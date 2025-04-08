@@ -39,18 +39,15 @@ public class AuthService implements com.example.backend.service.AuthService {
 
         User user = userRepository.findByemail(email);
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        String role = authorities.isEmpty()?null:authorities.iterator().next().getAuthority();
         String jwt =  jwtProvider.generatedToken(authentication);
 
         AuthResponse authResponse = new AuthResponse();
         authResponse.setJwt(jwt);
-        authResponse.setRole(USER_ROLE.valueOf(role));
-        authResponse.setMessage("Sign in success");
         return authResponse;
     }
 
     @Override
-    public AuthResponse signUp(RegisterRequest registerRequest) {
+    public void signUp(RegisterRequest registerRequest) {
         User user = userRepository.findByemail(registerRequest.getEmail());
         if(user != null){
             throw new BadRequestException("User is already existed with email " + registerRequest.getEmail());
@@ -63,13 +60,6 @@ public class AuthService implements com.example.backend.service.AuthService {
         Authentication authentication = new UsernamePasswordAuthenticationToken(registerRequest.getEmail(), registerRequest.getPassword());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String jwt =  jwtProvider.generatedToken(authentication);
-
-        AuthResponse authResponse = new AuthResponse();
-        authResponse.setRole(createdUser.getUserRole());
-        authResponse.setMessage("Register success");
-        authResponse.setJwt(jwt);
-        return authResponse;
     }
 
     private Authentication authenticate(String username, String password) {

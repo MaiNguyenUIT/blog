@@ -5,6 +5,7 @@ import org.mapstruct.BeanMapping;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -20,6 +21,7 @@ import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class AppConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -28,14 +30,15 @@ public class AppConfig {
                         //public APIs
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        //admin APIs
-                        .requestMatchers("/api/user/**").hasAnyRole("ADMIN")
-
-                        //Authenticated APIs
+//                        //admin APIs
+//                        .requestMatchers("/api/user/**").hasAnyRole("ADMIN")
+//
+//                        //Authenticated APIs
                         .requestMatchers("/api/blogs").authenticated()
-                        .requestMatchers("/api/comments").authenticated()
+//                        .requestMatchers("/api/comments").authenticated()
+////                        .requestMatchers(HttpMethod.PUT, "/api/auth").authenticated()
+//
 
-                        //Any request
                         .anyRequest().permitAll())
                 .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
                 .csrf(csrt -> csrt.disable())
