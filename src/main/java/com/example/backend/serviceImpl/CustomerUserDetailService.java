@@ -1,7 +1,6 @@
 package com.example.backend.serviceImpl;
 
-import com.example.backend.ENUM.USER_ROLE;
-import com.example.backend.model.Comment;
+import com.example.backend.ENUM.Role;
 import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,7 @@ public class CustomerUserDetailService implements UserDetailsService {
         if(user == null) {
             throw new UsernameNotFoundException("user not found with email " + email);
         }
-        USER_ROLE user_role = user.getUserRole();
+        Role user_role = user.getUserRole();
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(user_role.toString()));
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), authorities);
