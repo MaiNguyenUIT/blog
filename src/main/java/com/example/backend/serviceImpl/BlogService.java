@@ -45,7 +45,6 @@ public class BlogService implements com.example.backend.service.BlogService {
 
         blog.setTitle(blogDTO.getTitle());
         blog.setContent(blogDTO.getContent());
-        blog.setPriority(blogDTO.getPriority());
         blogRepository.save(blog);
         return blogDTO;
     }
@@ -58,7 +57,7 @@ public class BlogService implements com.example.backend.service.BlogService {
 
     @Override
     public List<Blog> getBlogsSortedByPriority() {
-        return blogRepository.findAll(Sort.by(Sort.Order.desc("priority")));
+        return blogRepository.findAll(Sort.by(Sort.Order.desc("createdDate")));
     }
 
     @Override

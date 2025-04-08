@@ -17,6 +17,7 @@ import java.util.Set;
 @Service
 public class JwtProvider {
     private SecretKey secretKey = Keys.hmacShaKeyFor(JwtConstant.SECRET_KEY.getBytes());
+
     public String generatedToken(Authentication authentication){
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
@@ -30,17 +31,7 @@ public class JwtProvider {
                 .compact();
         return jwt;
     }
-    private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 giờ
-    public String generateAccessToken(String email, USER_ROLE role) {
-
-        return Jwts.builder()
-                .claim("email", email)
-                .claim("authorities", role)
-                .setIssuedAt(new Date()) // Thời gian tạo token
-                .setExpiration(new Date(new Date().getTime() + EXPIRATION_TIME)) // Hạn sử dụng
-                .signWith(secretKey) // Ký bằng secret key
-                .compact(); // Tạo token
-    }
+    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 3; // 3 giờ
 
     public String getUserNameFromJwtToken(String jwt){
         jwt = jwt.substring(7);
@@ -49,15 +40,6 @@ public class JwtProvider {
         return email;
     }
 
-    public Date extractExpiration(String jwt) {
-        jwt = jwt.substring(7); // Remove "Bearer " prefix if exists
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(jwt)
-                .getBody();
-        return claims.getExpiration();
-    }
 
     private String populateAuthorities(Collection<? extends GrantedAuthority>authorities) {
         Set<String> auths = new HashSet<>();

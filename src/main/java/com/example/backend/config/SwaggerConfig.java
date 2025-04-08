@@ -20,11 +20,11 @@ public class SwaggerConfig {
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")))
-                .addSecurityItem(new SecurityRequirement().addList("bearerAuth")) // 🔥 Thêm dòng này để Swagger gửi token
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .info(new Info()
-                        .title("Ecommerce API")
+                        .title("Blog API")
                         .version("v1.0")
-                        .description("API documentation for the E-commerce application"));
+                        .description("API documentation for the Blog application"));
 
     }
 }

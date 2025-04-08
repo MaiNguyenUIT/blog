@@ -6,5 +6,5 @@ import com.example.backend.dto.response.AuthResponse;
 
 public interface AuthService {
     AuthResponse signIn(LoginRequest loginRequest);
-    AuthResponse signUp(RegisterRequest userAccountDTO);
+    void signUp(RegisterRequest userAccountDTO);
 }

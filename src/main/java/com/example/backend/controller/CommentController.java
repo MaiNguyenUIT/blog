@@ -10,6 +10,7 @@ import com.example.backend.service.UserService;
 import com.example.backend.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,13 +21,12 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
 
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<ApiResponse<Void>> createComment(@RequestHeader("Authorization") String jwt,
-                                                                 @RequestParam String commentId){
-        User user = userService.findUserByJwtToken(jwt);
-        commentService.deleteComment(commentId, user.getId());
+    public ResponseEntity<ApiResponse<Void>> deleteComment(@RequestParam String commentId){
+        User user = userService.findUserFromToken();
+        commentService.deleteComment(commentId, user.getId(), user.getUserRole());
         ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
-                .status(200)
                 .message("Delete blog successfully")
                 .build();
         return ResponseEntity.ok(apiResponse);
