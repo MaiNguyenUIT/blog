@@ -1,6 +1,6 @@
 package com.example.backend.serviceImpl;
 
-import com.example.backend.ENUM.USER_ROLE;
+import com.example.backend.ENUM.Role;
 import com.example.backend.dto.CommentDTO;
 import com.example.backend.exception.BadRequestException;
 import com.example.backend.exception.NotFoundException;
@@ -44,10 +44,10 @@ public class CommentService implements com.example.backend.service.CommentServic
     }
 
     @Override
-    public void deleteComment(String commentId, String userId, USER_ROLE userRole) {
+    public void deleteComment(String commentId, String userId, Role userRole) {
         Comment comment = commentRepository.findById(commentId)
                         .orElseThrow(() -> new NotFoundException("Comment is not exist with id: " + commentId));
-        if(!comment.getUserId().equals(userId) && userRole.equals(USER_ROLE.ROLE_USER)){
+        if(!comment.getUserId().equals(userId) && userRole.equals(Role.ROLE_USER)){
             throw new BadRequestException("U can not delete other people's comment");
         }
         commentRepository.deleteById(commentId);

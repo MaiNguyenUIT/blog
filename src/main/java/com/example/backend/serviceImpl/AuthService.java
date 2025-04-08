@@ -1,6 +1,5 @@
 package com.example.backend.serviceImpl;
 
-import com.example.backend.ENUM.USER_ROLE;
 import com.example.backend.config.JwtProvider;
 import com.example.backend.dto.request.LoginRequest;
 import com.example.backend.dto.request.RegisterRequest;
@@ -31,6 +30,7 @@ public class AuthService implements com.example.backend.service.AuthService {
     private CustomerUserDetailService customerUserDetailService;
     @Autowired
     private JwtProvider jwtProvider;
+
     @Override
     public AuthResponse signIn(LoginRequest loginRequest) {
         String email = loginRequest.getEmail();

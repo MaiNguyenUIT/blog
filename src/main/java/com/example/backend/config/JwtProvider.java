@@ -1,6 +1,5 @@
 package com.example.backend.config;
 
-import com.example.backend.ENUM.USER_ROLE;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
