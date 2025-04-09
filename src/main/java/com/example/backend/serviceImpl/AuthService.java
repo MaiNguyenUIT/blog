@@ -57,9 +57,6 @@ public class AuthService implements com.example.backend.service.AuthService {
         }
         User createdUser = UserAccountMapper.INSTANCE.toEntity(registerRequest);
         userRepository.save(createdUser);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(registerRequest.getEmail(), registerRequest.getPassword());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
     }
 
     private Authentication authenticate(String username, String password) {

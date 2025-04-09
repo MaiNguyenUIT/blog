@@ -38,7 +38,6 @@ public class UserService implements com.example.backend.service.UserService {
         user.setUserRole(updateInforRequest.getUserRole());
         user.setUsername(updateInforRequest.getName());
         user.setPassword(passwordEncoder.encode(updateInforRequest.getPassword()));
-        user.setUserRole(updateInforRequest.getUserRole());
         return userRepository.save(user);
     }
 
@@ -47,16 +46,6 @@ public class UserService implements com.example.backend.service.UserService {
         userRepository.deleteById(userId);
     }
 
-    @Override
-    public User findUserByJwtToken(String jwt) {
-        String email = jwtProvider.getUserNameFromJwtToken(jwt);
-        User user = userRepository.findByemail(email);
-        if(user == null){
-            System.out.println("User is not found with email in jwt");
-            throw new NotFoundException("User is not found with email: " + email);
-        }
-        return user;
-    }
 
     @Override
     public User uploadImage(User user, MultipartFile file) throws IOException {
@@ -76,6 +65,5 @@ public class UserService implements com.example.backend.service.UserService {
         }
         return user;
     }
-
 
 }
