@@ -8,5 +8,4 @@ public class UpdateInforRequest {
     private String name;
     private String password;
     private Role userRole;
-    private String avatarUrl;
 }
