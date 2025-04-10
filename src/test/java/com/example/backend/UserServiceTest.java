@@ -147,13 +147,13 @@ public class UserServiceTest {
 
     @Test
     void testFindUserFromToken() {
-        String email = "test@example.com";
+        String username = "test";
         User user = new User();
-        user.setEmail(email);
+        user.setEmail(username);
 
 
         Authentication authentication = Mockito.mock(Authentication.class);
-        Mockito.when(authentication.getName()).thenReturn(email);
+        Mockito.when(authentication.getName()).thenReturn(username);
 
         SecurityContext securityContext = Mockito.mock(SecurityContext.class);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
@@ -161,12 +161,12 @@ public class UserServiceTest {
         SecurityContextHolder.setContext(securityContext);
 
 
-        Mockito.when(userRepository.findByemail(email)).thenReturn(user);
+        Mockito.when(userRepository.findByusername(username)).thenReturn(user);
 
         User result = userService.findUserFromToken();
 
         assertNotNull(result);
-        assertEquals(email, result.getEmail());
+        assertEquals(username, result.getEmail());
     }
 
     @Test
@@ -182,7 +182,7 @@ public class UserServiceTest {
         SecurityContextHolder.setContext(securityContext);
 
 
-        Mockito.when(userRepository.findByemail(email)).thenReturn(null);
+        Mockito.when(userRepository.findByusername(email)).thenReturn(null);
 
         NotFoundException ex = assertThrows(NotFoundException.class, () -> {
             userService.findUserFromToken();

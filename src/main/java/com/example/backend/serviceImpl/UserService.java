@@ -57,11 +57,11 @@ public class UserService implements com.example.backend.service.UserService {
 
     @Override
     public User findUserFromToken() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByemail(email);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByusername(username);
         if(user == null){
             System.out.println("User is not found ");
-            throw new NotFoundException("User is not found with email: " + email);
+            throw new NotFoundException("User is not found with email: " + username);
         }
         return user;
     }

@@ -59,15 +59,15 @@ public class AuthServiceTest {
     @Test
     void testSignIn() throws Exception {
         LoginRequest loginRequest = new LoginRequest();
-        String email = "testEmail@gmail.com";
+        String username = "test";
         String password = "testPassword";
         String encodedPassword = new BCryptPasswordEncoder().encode(password);
 
-        loginRequest.setEmail(email);
+        loginRequest.setUsername(username);
         loginRequest.setPassword(password);
 
         User user = new User();
-        user.setEmail(email);
+        user.setEmail(username);
         user.setPassword(encodedPassword);
         String jwtToken = "mocked.jwt.token";
 
@@ -78,8 +78,8 @@ public class AuthServiceTest {
         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails,
                 null, userDetails.getAuthorities());
 
-        when(userRepository.findByemail("testEmail@gmail.com")).thenReturn(user);
-        when(customerUserDetailService.loadUserByUsername(email)).thenReturn(userDetails);
+        when(userRepository.findByusername("testEmail@gmail.com")).thenReturn(user);
+        when(customerUserDetailService.loadUserByUsername(username)).thenReturn(userDetails);
         when(passwordEncoder.matches(loginRequest.getPassword(), userDetails.getPassword())).thenReturn(true);
         when(jwtProvider.generatedToken(authentication)).thenReturn(jwtToken);
 
@@ -92,24 +92,24 @@ public class AuthServiceTest {
     }
 
     @Test
-    void TestSignIn_InvalidEmail() throws Exception {
+    void TestSignIn_InvalidUserName() throws Exception {
         LoginRequest loginRequest = new LoginRequest();
-        String email = "nonExist@gmail.com";
+        String username = "nonExist";
         String password = "testPassword";
         String encodedPassword = new BCryptPasswordEncoder().encode(password);
 
-        loginRequest.setEmail(email);
+        loginRequest.setUsername(username);
         loginRequest.setPassword(password);
 
         User user = new User();
-        user.setEmail(email);
+        user.setUsername(username);
         user.setPassword(encodedPassword);
 
 
 
         when(passwordEncoder.encode("testPassword")).thenReturn(encodedPassword);
-        when(userRepository.findByemail("nonExist@gmail.com")).thenReturn(null);
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User("testEmail@gmail.com",
+        when(userRepository.findByusername("nonExist")).thenReturn(null);
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User("testUserName",
                 encodedPassword,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
 
@@ -123,23 +123,23 @@ public class AuthServiceTest {
     @Test
     void TestSignIn_InvalidPassword() throws Exception {
         LoginRequest loginRequest = new LoginRequest();
-        String email = "test@gmail.com";
+        String email = "testUsername";
         String password = "testPassword";
         String encodedPassword = new BCryptPasswordEncoder().encode("hihihaha");
 
-        loginRequest.setEmail(email);
+        loginRequest.setUsername(email);
         loginRequest.setPassword(password);
 
         User user = new User();
         user.setEmail(email);
         user.setPassword(encodedPassword);
 
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User("testEmail@gmail.com",
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User("testUsername",
                 encodedPassword,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
 
         when(passwordEncoder.matches(loginRequest.getPassword(), userDetails.getPassword())).thenReturn(false);
-        when(userRepository.findByemail("test@gmail.com")).thenReturn(user);
+        when(userRepository.findByusername("testUsername")).thenReturn(user);
         when(customerUserDetailService.loadUserByUsername(email)).thenReturn(userDetails);
 
         BadRequestException ex = assertThrows(BadRequestException.class, () -> {
@@ -158,7 +158,7 @@ public class AuthServiceTest {
 
         User user = UserAccountMapper.INSTANCE.toEntity(request);
 
-        Mockito.when(userRepository.findByemail("test@gmail.com")).thenReturn(null);
+        Mockito.when(userRepository.findByusername("test")).thenReturn(null);
         Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
 
 
@@ -176,13 +176,13 @@ public class AuthServiceTest {
 
         User user = UserAccountMapper.INSTANCE.toEntity(request);
 
-        Mockito.when(userRepository.findByemail("test@gmail.com")).thenReturn(user);
+        Mockito.when(userRepository.findByusername("test")).thenReturn(user);
 
         BadRequestException ex = assertThrows(BadRequestException.class, () -> {
             authService.signUp(request);
         });
 
-        assertTrue(ex.getMessage().contains("User is already existed with email " + request.getEmail()));
+        assertTrue(ex.getMessage().contains("User is already existed with username " + request.getUsername()));
     }
 
     @Test
@@ -196,7 +196,7 @@ public class AuthServiceTest {
             authService.signUp(request);
         });
 
-        assertTrue(ex.getMessage().contains("Email or password is incorrect"));
+        assertTrue(ex.getMessage().contains("Email or password or userName is incorrect"));
     }
 
     @Test
@@ -210,6 +210,20 @@ public class AuthServiceTest {
             authService.signUp(request);
         });
 
-        assertTrue(ex.getMessage().contains("Email or password is incorrect"));
+        assertTrue(ex.getMessage().contains("Email or password or userName is incorrect"));
+    }
+
+    @Test
+    void testSignUp_WrongUserName() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("test.gmail.com");
+        request.setPassword("Test@1234");
+        request.setUsername("");
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () -> {
+            authService.signUp(request);
+        });
+
+        assertTrue(ex.getMessage().contains("Email or password or userName is incorrect"));
     }
 }

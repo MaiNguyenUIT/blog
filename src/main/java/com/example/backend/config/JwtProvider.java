@@ -24,7 +24,7 @@ public class JwtProvider {
 
         String jwt = Jwts.builder().setIssuedAt(new Date())
                 .setExpiration(new Date(new Date().getTime() + EXPIRATION_TIME))
-                .claim("email", authentication.getName())
+                .claim("username", authentication.getName())
                 .claim("authorities", role)
                 .signWith(secretKey)
                 .compact();
@@ -35,8 +35,8 @@ public class JwtProvider {
     public String getUserNameFromJwtToken(String jwt){
         jwt = jwt.substring(7);
         Claims claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(jwt).getBody();
-        String email = String.valueOf(claims.get("email"));
-        return email;
+        String username = String.valueOf(claims.get("username"));
+        return username;
     }
 
 

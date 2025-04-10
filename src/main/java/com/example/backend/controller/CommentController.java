@@ -23,12 +23,9 @@ public class CommentController {
 
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<ApiResponse<Void>> deleteComment(@RequestParam String commentId){
+    public ResponseEntity<String> deleteComment(@PathVariable String commentId){
         User user = userService.findUserFromToken();
         commentService.deleteComment(commentId, user.getId(), user.getUserRole());
-        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
-                .message("Delete blog successfully")
-                .build();
-        return ResponseEntity.ok(apiResponse);
+        return ResponseEntity.ok("Delete blog successfully");
     }
 }

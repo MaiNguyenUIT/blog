@@ -20,10 +20,10 @@ public class CustomerUserDetailService implements UserDetailsService {
     private UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByemail(email);
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByusername(username);
         if(user == null) {
-            throw new UsernameNotFoundException("user not found with email " + email);
+            throw new UsernameNotFoundException("user not found with username " + username);
         }
         Role user_role = user.getUserRole();
         List<GrantedAuthority> authorities = new ArrayList<>();

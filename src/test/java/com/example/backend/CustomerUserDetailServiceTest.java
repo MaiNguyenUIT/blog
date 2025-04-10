@@ -44,9 +44,9 @@ public class CustomerUserDetailServiceTest {
         user1.setUserRole(Role.ROLE_USER);
 
 
-        Mockito.when(userRepository.findByemail(email)).thenReturn(user1);
+        Mockito.when(userRepository.findByusername(user1.getUsername())).thenReturn(user1);
 
-        UserDetails result = customerUserDetailService.loadUserByUsername(email);
+        UserDetails result = customerUserDetailService.loadUserByUsername(user1.getUsername());
 
         assertNotNull(result);
         assertTrue(result.getAuthorities().stream()
@@ -65,12 +65,12 @@ public class CustomerUserDetailServiceTest {
         user1.setUserRole(Role.ROLE_USER);
 
 
-        Mockito.when(userRepository.findByemail(email)).thenReturn(null);
+        Mockito.when(userRepository.findByusername(user1.getUsername())).thenReturn(null);
 
         UsernameNotFoundException ex = assertThrows(UsernameNotFoundException.class, () -> {
-            customerUserDetailService.loadUserByUsername(email);
+            customerUserDetailService.loadUserByUsername(user1.getUsername());
         });
 
-        assertTrue(ex.getMessage().contains("user not found with email " + email));
+        assertTrue(ex.getMessage().contains("user not found with username " + user1.getUsername()));
     }
 }
