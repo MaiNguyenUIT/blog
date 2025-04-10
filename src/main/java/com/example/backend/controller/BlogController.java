@@ -68,13 +68,17 @@ public class BlogController {
         return ResponseEntity.ok(blogs);
     }
 
+    @GetMapping("/user")
+    public ResponseEntity<List<Blog>> getOwnBlog(){
+        User user = userService.findUserFromToken();
+        List<Blog> blogs = blogService.getUserBlog(user.getId());
+        return ResponseEntity.ok(blogs);
+    }
+
     @DeleteMapping("/{blogId}")
-    public ResponseEntity<ApiResponse<Void>> deleteBlogById(@PathVariable String blogId){
+    public ResponseEntity<String> deleteBlogById(@PathVariable String blogId){
         blogService.deleteBlog(blogId);
-        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
-                .message("Delete blog successfully")
-                .build();
-        return ResponseEntity.ok(apiResponse);
+        return ResponseEntity.ok("Delete blog successfully");
     }
 
     @GetMapping("/sort")

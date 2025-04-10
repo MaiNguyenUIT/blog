@@ -1,6 +1,6 @@
 package com.example.backend.model;
 
-import com.example.backend.ENUM.USER_ROLE;
+import com.example.backend.ENUM.Role;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -15,6 +15,6 @@ public class User {
     private String username;
     private String email;
     private String password;
-    private USER_ROLE userRole = USER_ROLE.ROLE_USER;
+    private Role userRole = Role.ROLE_USER;
     private String avatarUrl;
 }
