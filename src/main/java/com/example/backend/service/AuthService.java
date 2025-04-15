@@ -7,4 +7,5 @@ import com.example.backend.dto.response.AuthResponse;
 public interface AuthService {
     AuthResponse signIn(LoginRequest loginRequest);
     void signUp(RegisterRequest userAccountDTO);
+    void logOut(String jwt);
 }

@@ -13,11 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Collection;
 
 @Service
@@ -30,6 +30,10 @@ public class AuthService implements com.example.backend.service.AuthService {
     private CustomerUserDetailService customerUserDetailService;
     @Autowired
     private JwtProvider jwtProvider;
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
+    @Autowired
+    private UserService userService;
 
     @Override
     public AuthResponse signIn(LoginRequest loginRequest) {
@@ -59,6 +63,17 @@ public class AuthService implements com.example.backend.service.AuthService {
         userRepository.save(createdUser);
     }
 
+    @Override
+    public void logOut(String jwt) {
+        User user = userService.findUserFromToken();
+        Instant expirationTime = jwtProvider.extractExpiration(jwt).toInstant();
+        long expirationMillis = expirationTime.toEpochMilli() - System.currentTimeMillis();
+        jwt = jwt.substring(7);
+
+        // Blacklist the access token in Redis
+        tokenBlacklistService.blacklistToken(jwt, expirationMillis);
+    }
+
     private Authentication authenticate(String username, String password) {
         UserDetails userDetails = customerUserDetailService.loadUserByUsername(username);
 
@@ -67,6 +82,7 @@ public class AuthService implements com.example.backend.service.AuthService {
         }
 
         if(!passwordEncoder.matches(password,userDetails.getPassword())){
+            System.out.println("invalid password");
             throw new BadRequestException("Invalid password");
         }
 

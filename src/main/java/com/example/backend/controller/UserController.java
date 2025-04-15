@@ -59,4 +59,10 @@ public class UserController {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
+
+    @GetMapping("/user")
+    public ResponseEntity<User> getUserInformation() throws IOException {
+        User user = userService.findUserFromToken();
+        return ResponseEntity.ok(user);
+    }
 }

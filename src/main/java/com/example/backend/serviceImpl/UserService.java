@@ -61,7 +61,7 @@ public class UserService implements com.example.backend.service.UserService {
         User user = userRepository.findByusername(username);
         if(user == null){
             System.out.println("User is not found ");
-            throw new NotFoundException("User is not found with email: " + username);
+            throw new NotFoundException("User is not found with userName: " + username);
         }
         return user;
     }

@@ -48,4 +48,14 @@ public class JwtProvider {
 
         return String.join(",", auths);
     }
+
+    public Date extractExpiration(String jwt) {
+        jwt = jwt.substring(7); // Remove "Bearer " prefix if exists
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(jwt)
+                .getBody();
+        return claims.getExpiration();
+    }
 }
