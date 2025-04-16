@@ -2,9 +2,12 @@ package com.example.backend.serviceImpl;
 
 import com.example.backend.config.JwtProvider;
 import com.example.backend.dto.request.UpdateInforRequest;
+import com.example.backend.exception.BadRequestException;
 import com.example.backend.exception.NotFoundException;
 import com.example.backend.model.User;
+import com.example.backend.patterns.observer.Observer;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.utils.ValidationAccount;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,6 +29,7 @@ public class UserService implements com.example.backend.service.UserService {
     @Autowired
     private CloudinaryService cloudinaryService;
 
+
     @Override
     public List<User> getAllUser() {
         return userRepository.findAll();
@@ -36,8 +40,11 @@ public class UserService implements com.example.backend.service.UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User is not found with id: " + userId));
         user.setUserRole(updateInforRequest.getUserRole());
-        user.setUsername(updateInforRequest.getName());
-        user.setPassword(passwordEncoder.encode(updateInforRequest.getPassword()));
+        if(ValidationAccount.isValidEmail(updateInforRequest.getEmail())){
+            user.setEmail(updateInforRequest.getEmail());
+        } else {
+            throw new BadRequestException("email is incorrect");
+        }
         return userRepository.save(user);
     }
 
@@ -65,5 +72,4 @@ public class UserService implements com.example.backend.service.UserService {
         }
         return user;
     }
-
 }

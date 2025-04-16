@@ -2,6 +2,8 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.BlogDTO;
 import com.example.backend.dto.CommentDTO;
+import com.example.backend.dto.response.BlogResponse;
+import com.example.backend.dto.response.CommentResponse;
 import com.example.backend.model.Blog;
 import com.example.backend.model.Comment;
 import com.example.backend.model.User;
@@ -14,7 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @RequestMapping("api/blogs")
 @RestController
@@ -57,8 +61,15 @@ public class BlogController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping()
-    public ResponseEntity<List<Blog>> getAllBlog(){
-        List<Blog> blogs = blogService.getALlBlog();
+    public ResponseEntity<List<BlogResponse>> getAllBlog(){
+        List<BlogResponse> blogs = blogService.getALlBlog();
+        return ResponseEntity.ok(blogs);
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/public")
+    public ResponseEntity<List<BlogResponse>> getAllPublicBlog(){
+        List<BlogResponse> blogs = blogService.getAllPublicBlog();
         return ResponseEntity.ok(blogs);
     }
 
@@ -76,9 +87,9 @@ public class BlogController {
     }
 
     @DeleteMapping("/{blogId}")
-    public ResponseEntity<String> deleteBlogById(@PathVariable String blogId){
+    public ResponseEntity<Map<String, String>> deleteBlogById(@PathVariable String blogId){
         blogService.deleteBlog(blogId);
-        return ResponseEntity.ok("Delete blog successfully");
+        return ResponseEntity.ok(Collections.singletonMap("message", "Delete blog successfully"));
     }
 
     @GetMapping("/sort")
@@ -99,8 +110,15 @@ public class BlogController {
     }
 
     @GetMapping("/{blogId}/comments")
-    public ResponseEntity<List<Comment>> getBlogComment(@PathVariable String blogId){
-        List<Comment> comments = commentService.getBlogComment(blogId);
+    public ResponseEntity<List<CommentResponse>> getBlogComment(@PathVariable String blogId){
+        List<CommentResponse> comments = commentService.getBlogComment(blogId);
         return ResponseEntity.ok(comments);
+    }
+
+    @PutMapping("/public")
+    public ResponseEntity<Void> publicBlogs(@RequestParam boolean isPublic, @RequestBody List<String> blogIds){
+        blogService.publicBlogs(blogIds, isPublic);
+        System.out.println("public");
+        return ResponseEntity.ok().build();
     }
 }

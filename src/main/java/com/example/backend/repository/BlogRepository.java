@@ -11,4 +11,5 @@ import java.util.List;
 public interface BlogRepository extends MongoRepository<Blog, String> {
     List<Blog> findByuserId(String userId);
     List<Blog> findAll(Sort sort);
+    List<Blog> findByIsPublicTrue();
 }
