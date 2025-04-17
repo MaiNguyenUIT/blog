@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/auth")
@@ -35,11 +37,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Void>> signUp(@RequestBody RegisterRequest registerRequest){
+    public ResponseEntity<Map<String, String>> signUp(@RequestBody RegisterRequest registerRequest){
         authService.signUp(registerRequest);
-        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
-                .message("Register successfully")
-                .build();
-        return ResponseEntity.ok(apiResponse);
+        return ResponseEntity.ok(Collections.singletonMap("message", "Register successfully"));
     }
 }

@@ -1,6 +1,5 @@
 package com.example.backend.config;
 
-import com.example.backend.ENUM.USER_ROLE;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -25,7 +24,7 @@ public class JwtProvider {
 
         String jwt = Jwts.builder().setIssuedAt(new Date())
                 .setExpiration(new Date(new Date().getTime() + EXPIRATION_TIME))
-                .claim("email", authentication.getName())
+                .claim("username", authentication.getName())
                 .claim("authorities", role)
                 .signWith(secretKey)
                 .compact();
@@ -36,8 +35,8 @@ public class JwtProvider {
     public String getUserNameFromJwtToken(String jwt){
         jwt = jwt.substring(7);
         Claims claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(jwt).getBody();
-        String email = String.valueOf(claims.get("email"));
-        return email;
+        String username = String.valueOf(claims.get("username"));
+        return username;
     }
 
 
@@ -48,5 +47,15 @@ public class JwtProvider {
         }
 
         return String.join(",", auths);
+    }
+
+    public Date extractExpiration(String jwt) {
+        jwt = jwt.substring(7); // Remove "Bearer " prefix if exists
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(jwt)
+                .getBody();
+        return claims.getExpiration();
     }
 }

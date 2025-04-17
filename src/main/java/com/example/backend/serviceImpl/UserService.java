@@ -2,9 +2,12 @@ package com.example.backend.serviceImpl;
 
 import com.example.backend.config.JwtProvider;
 import com.example.backend.dto.request.UpdateInforRequest;
+import com.example.backend.exception.BadRequestException;
 import com.example.backend.exception.NotFoundException;
 import com.example.backend.model.User;
+import com.example.backend.patterns.observer.Observer;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.utils.ValidationAccount;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,6 +29,7 @@ public class UserService implements com.example.backend.service.UserService {
     @Autowired
     private CloudinaryService cloudinaryService;
 
+
     @Override
     public List<User> getAllUser() {
         return userRepository.findAll();
@@ -36,9 +40,11 @@ public class UserService implements com.example.backend.service.UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User is not found with id: " + userId));
         user.setUserRole(updateInforRequest.getUserRole());
-        user.setUsername(updateInforRequest.getName());
-        user.setPassword(passwordEncoder.encode(updateInforRequest.getPassword()));
-        user.setUserRole(updateInforRequest.getUserRole());
+        if(ValidationAccount.isValidEmail(updateInforRequest.getEmail())){
+            user.setEmail(updateInforRequest.getEmail());
+        } else {
+            throw new BadRequestException("email is incorrect");
+        }
         return userRepository.save(user);
     }
 
@@ -47,16 +53,6 @@ public class UserService implements com.example.backend.service.UserService {
         userRepository.deleteById(userId);
     }
 
-    @Override
-    public User findUserByJwtToken(String jwt) {
-        String email = jwtProvider.getUserNameFromJwtToken(jwt);
-        User user = userRepository.findByemail(email);
-        if(user == null){
-            System.out.println("User is not found with email in jwt");
-            throw new NotFoundException("User is not found with email: " + email);
-        }
-        return user;
-    }
 
     @Override
     public User uploadImage(User user, MultipartFile file) throws IOException {
@@ -68,14 +64,12 @@ public class UserService implements com.example.backend.service.UserService {
 
     @Override
     public User findUserFromToken() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByemail(email);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByusername(username);
         if(user == null){
             System.out.println("User is not found ");
-            throw new NotFoundException("User is not found with email: " + email);
+            throw new NotFoundException("User is not found with userName: " + username);
         }
         return user;
     }
-
-
 }

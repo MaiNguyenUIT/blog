@@ -1,7 +1,6 @@
 package com.example.backend.serviceImpl;
 
-import com.example.backend.ENUM.USER_ROLE;
-import com.example.backend.model.Comment;
+import com.example.backend.ENUM.Role;
 import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,14 +20,14 @@ public class CustomerUserDetailService implements UserDetailsService {
     private UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByemail(email);
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByusername(username);
         if(user == null) {
-            throw new UsernameNotFoundException("user not found with email " + email);
+            throw new UsernameNotFoundException("user not found with username " + username);
         }
-        USER_ROLE user_role = user.getUserRole();
+        Role user_role = user.getUserRole();
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(user_role.toString()));
-        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), authorities);
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities);
     }
 }

@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+import java.util.Map;
+
 @RestController
 @RequestMapping("api/comments")
 public class CommentController {
@@ -21,14 +24,12 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
 
-    @PreAuthorize("isAuthenticated()")
+
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<ApiResponse<Void>> deleteComment(@RequestParam String commentId){
+    @PreAuthorize("hasRole('ADMIN') || @blogSecurity.isOwner(#blogId)")
+    public ResponseEntity<Map<String, String>> deleteComment(@PathVariable String commentId){
         User user = userService.findUserFromToken();
         commentService.deleteComment(commentId, user.getId(), user.getUserRole());
-        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
-                .message("Delete blog successfully")
-                .build();
-        return ResponseEntity.ok(apiResponse);
+        return ResponseEntity.ok(Collections.singletonMap("message", "Delete comment successfully"));
     }
 }

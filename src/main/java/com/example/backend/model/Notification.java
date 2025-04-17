@@ -5,19 +5,15 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Document(
-        "blogs"
+        "notifications"
 )
 @Data
-public class Blog {
+public class Notification {
     @Id
     private String id;
-    private String title;
     private String content;
-    private LocalDateTime createdDate = LocalDateTime.now();
+    private LocalDateTime localDateTime;
     private String userId;
-    private int priority;
-    private boolean isPublic = false;
 }

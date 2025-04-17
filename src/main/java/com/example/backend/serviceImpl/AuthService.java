@@ -1,6 +1,5 @@
 package com.example.backend.serviceImpl;
 
-import com.example.backend.ENUM.USER_ROLE;
 import com.example.backend.config.JwtProvider;
 import com.example.backend.dto.request.LoginRequest;
 import com.example.backend.dto.request.RegisterRequest;
@@ -14,11 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Collection;
 
 @Service
@@ -31,13 +30,18 @@ public class AuthService implements com.example.backend.service.AuthService {
     private CustomerUserDetailService customerUserDetailService;
     @Autowired
     private JwtProvider jwtProvider;
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
+    @Autowired
+    private UserService userService;
+
     @Override
     public AuthResponse signIn(LoginRequest loginRequest) {
-        String email = loginRequest.getEmail();
+        String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
-        Authentication authentication = authenticate(email, password);
+        Authentication authentication = authenticate(username, password);
 
-        User user = userRepository.findByemail(email);
+        User user = userRepository.findByusername(username);
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         String jwt =  jwtProvider.generatedToken(authentication);
 
@@ -48,18 +52,26 @@ public class AuthService implements com.example.backend.service.AuthService {
 
     @Override
     public void signUp(RegisterRequest registerRequest) {
-        User user = userRepository.findByemail(registerRequest.getEmail());
+        User user = userRepository.findByusername(registerRequest.getUsername());
         if(user != null){
-            throw new BadRequestException("User is already existed with email " + registerRequest.getEmail());
+            throw new BadRequestException("User is already existed with username " + registerRequest.getUsername());
         }
-        if(!ValidationAccount.isValidEmail(registerRequest.getEmail()) || !ValidationAccount.isValidPassword(registerRequest.getPassword())){
-            throw new BadRequestException("Email or password is incorrect");
+        if(!ValidationAccount.isValidEmail(registerRequest.getEmail()) || !ValidationAccount.isValidPassword(registerRequest.getPassword()) || !ValidationAccount.isValidUserName(registerRequest.getUsername())){
+            throw new BadRequestException("Email or password or userName is incorrect");
         }
         User createdUser = UserAccountMapper.INSTANCE.toEntity(registerRequest);
         userRepository.save(createdUser);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(registerRequest.getEmail(), registerRequest.getPassword());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
 
+    @Override
+    public void logOut(String jwt) {
+        User user = userService.findUserFromToken();
+        Instant expirationTime = jwtProvider.extractExpiration(jwt).toInstant();
+        long expirationMillis = expirationTime.toEpochMilli() - System.currentTimeMillis();
+        jwt = jwt.substring(7);
+
+        // Blacklist the access token in Redis
+        tokenBlacklistService.blacklistToken(jwt, expirationMillis);
     }
 
     private Authentication authenticate(String username, String password) {
@@ -70,6 +82,7 @@ public class AuthService implements com.example.backend.service.AuthService {
         }
 
         if(!passwordEncoder.matches(password,userDetails.getPassword())){
+            System.out.println("invalid password");
             throw new BadRequestException("Invalid password");
         }
 
