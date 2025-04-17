@@ -1,28 +1,35 @@
 package com.example.backend.serviceImpl;
 
+import com.example.backend.ENUM.Role;
 import com.example.backend.dto.BlogDTO;
+import com.example.backend.dto.UserDataDTO;
 import com.example.backend.dto.response.BlogResponse;
 import com.example.backend.exception.BadRequestException;
 import com.example.backend.exception.NotFoundException;
 import com.example.backend.mapper.BlogMapper;
 import com.example.backend.model.Blog;
 import com.example.backend.model.User;
+import com.example.backend.patterns.observer.Observer;
+import com.example.backend.patterns.observer.Subject;
 import com.example.backend.repository.BlogRepository;
 import com.example.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
-public class BlogService implements com.example.backend.service.BlogService {
+public class BlogService implements com.example.backend.service.BlogService, Subject {
     @Autowired
     private BlogRepository blogRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private NotifyService notifyService;
+    List<Observer> observers = new ArrayList<>();
     @Override
     public List<Blog> getUserBlog(String userId) {
         return blogRepository.findByuserId(userId);
@@ -32,20 +39,36 @@ public class BlogService implements com.example.backend.service.BlogService {
     public List<BlogResponse> getALlBlog() {
         List<BlogResponse> blogResponses = new ArrayList<>();
 
-        for(Blog blog : blogRepository.findAll()) {
-            User user = userRepository.findById(blog.getUserId()).orElse(null);
-            BlogResponse blogResponse = new BlogResponse();
-            String avatar = "";
-            String userName = "";
-            if(user != null){
-                avatar = user.getAvatarUrl();
-                userName = user.getUsername();
-            } else {
-                avatar = "https://th.bing.com/th/id/OIP.HeegDxfGGg2f1BCm3xxsVgHaDw?rs=1&pid=ImgDetMain";
-                userName = "Anonymous";
+        List<Blog> blogs = blogRepository.findAll();
+
+        Set<String> userIds = blogs.stream()
+                .map(Blog::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        List<User> users = userRepository.findAllById(userIds);
+        Map<String, UserDataDTO> userIdToData = users.stream()
+                .collect(Collectors.toMap(
+                        User::getId,
+                        user -> {
+                            UserDataDTO data = new UserDataDTO();
+                            data.setUserName(user.getUsername());
+                            data.setAvatarUrl(user.getAvatarUrl());
+                            return data;
+                        }
+                ));
+
+        for(Blog blog : blogs) {
+            UserDataDTO userData = userIdToData.get(blog.getUserId());
+            String userName = "Anonymous";
+            String avatar = "https://th.bing.com/th/id/OIP.HeegDxfGGg2f1BCm3xxsVgHaDw?rs=1&pid=ImgDetMain";
+
+            if (userData != null) {
+                userName = userData.getUserName();
+                avatar = userData.getAvatarUrl();
             }
 
-
+            BlogResponse blogResponse = new BlogResponse();
             blogResponse.setContent(blog.getContent());
             blogResponse.setTitle(blog.getTitle());
             blogResponse.setUserAvatar(avatar);
@@ -62,12 +85,36 @@ public class BlogService implements com.example.backend.service.BlogService {
     @Override
     public List<BlogResponse> getAllPublicBlog() {
         List<BlogResponse> blogResponses = new ArrayList<>();
-        for(Blog blog : blogRepository.findByIsPublicTrue()) {
-            User user = userRepository.findById(blog.getUserId()).orElseThrow(
-                    () -> new NotFoundException("User not found with id: " + blog.getUserId())
-            );
-            String avatar = user.getAvatarUrl();
-            String userName = user.getUsername();
+
+        List<Blog> blogs = blogRepository.findByIsPublicTrue();
+
+        Set<String> userIds = blogs.stream()
+                .map(Blog::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        List<User> users = userRepository.findAllById(userIds);
+        Map<String, UserDataDTO> userIdToData = users.stream()
+                .collect(Collectors.toMap(
+                        User::getId,
+                        user -> {
+                            UserDataDTO data = new UserDataDTO();
+                            data.setUserName(user.getUsername());
+                            data.setAvatarUrl(user.getAvatarUrl());
+                            return data;
+                        }
+                ));
+
+        for(Blog blog : blogs) {
+            UserDataDTO userData = userIdToData.get(blog.getUserId());
+
+            String userName = "Anonymous";
+            String avatar = "https://th.bing.com/th/id/OIP.HeegDxfGGg2f1BCm3xxsVgHaDw?rs=1&pid=ImgDetMain";
+
+            if (userData != null) {
+                userName = userData.getUserName();
+                avatar = userData.getAvatarUrl();
+            }
 
             BlogResponse blogResponse = new BlogResponse();
             blogResponse.setContent(blog.getContent());
@@ -94,12 +141,12 @@ public class BlogService implements com.example.backend.service.BlogService {
     public BlogDTO updateBlog(String userId, String blogId, BlogDTO blogDTO) {
         Blog blog = blogRepository.findById(blogId)
                 .orElseThrow(() -> new NotFoundException("Blog is not found with id: " + blogId));
-        if(!blog.getUserId().equals(userId)){
-            throw new BadRequestException("You can't update other people's blog");
-        }
+        User user = userRepository.findById(userId).
+                orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
 
         blog.setTitle(blogDTO.getTitle());
         blog.setContent(blogDTO.getContent());
+        blog.setPublic(blogDTO.isPublic());
         blogRepository.save(blog);
         return blogDTO;
     }
@@ -118,27 +165,39 @@ public class BlogService implements com.example.backend.service.BlogService {
     @Override
     public void deleteBlog(String id) {
         blogRepository.deleteById(id);
+        notifyUsers(id);
     }
 
     @Override
-    public void publicBlogs(List<String> blogIds, boolean isPublic) {
-        if(isPublic)
-        {
-            for(String id : blogIds){
-                Blog blog = blogRepository.findById(id).orElseThrow(
-                        () ->  new NotFoundException("Blog is not found with id: " + id)
-                );
+    public void updateBlogStatus(List<Blog> blogs, String isPublic) {
+        if(isPublic.equals("true")){
+            for(Blog blog : blogs){
                 blog.setPublic(true);
                 blogRepository.save(blog);
             }
         } else {
-            for(String id : blogIds){
-                Blog blog = blogRepository.findById(id).orElseThrow(
-                        () ->  new NotFoundException("Blog is not found with id: " + id)
-                );
+            for(Blog blog : blogs){
                 blog.setPublic(false);
                 blogRepository.save(blog);
             }
+        }
+    }
+
+    @Override
+    public void registerUser(Observer customer) {
+        observers.add(customer);
+    }
+
+    @Override
+    public void removeUser(Observer customer) {
+
+    }
+
+    @Override
+    public void notifyUsers(String message) {
+        registerUser(notifyService);
+        for(Observer observer : observers){
+            observer.delete(message);
         }
     }
 }

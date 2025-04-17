@@ -42,6 +42,7 @@ public class BlogController {
     }
 
     @PutMapping("/{blogId}")
+    @PreAuthorize("hasRole('ADMIN') || @blogSecurity.isOwner(#blogId)")
     public ResponseEntity<ApiResponse<BlogDTO>> updateBlog(@RequestBody BlogDTO blogDTO,
                                                            @PathVariable String blogId){
         User user = userService.findUserFromToken();
@@ -116,9 +117,10 @@ public class BlogController {
     }
 
     @PutMapping("/public")
-    public ResponseEntity<Void> publicBlogs(@RequestParam boolean isPublic, @RequestBody List<String> blogIds){
-        blogService.publicBlogs(blogIds, isPublic);
-        System.out.println("public");
+    public ResponseEntity<Void> publicBlogs(@RequestParam String isPublic, @RequestBody List<Blog> blogs){
+        blogService.updateBlogStatus(blogs, isPublic);
+        System.out.println(isPublic);
         return ResponseEntity.ok().build();
     }
+
 }

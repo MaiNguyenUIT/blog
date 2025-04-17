@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class NotifyService implements com.example.backend.service.NotifyService, Observer {
@@ -31,7 +32,7 @@ public class NotifyService implements com.example.backend.service.NotifyService,
     @Override
     public void update(String message) {
         List<String> paths = new ArrayList<>(Arrays.asList(message.split(" ")));
-        User existUser = userRepository.findByusername(paths.get(0));
+        User commentOwner = userRepository.findByusername(paths.get(0));
 
         Blog blog = blogRepository.findById(paths.get(paths.size() - 1)).orElseThrow(
                 () -> new NotFoundException("Blog is not found with id: " + paths.get(paths.size() - 1))
@@ -48,37 +49,66 @@ public class NotifyService implements com.example.backend.service.NotifyService,
         //Notify to people who have commented blog
         List<Comment> comments = commentRepository.findByblogId(paths.get(paths.size() - 1));
         Set<String> sentUserIds = new HashSet<>();
-        for(Comment comment : comments){
-            String userId = comment.getUserId();
 
-            if (!sentUserIds.contains(userId) && !existUser.getId().equals(userId) && !ownBlogId.equals(userId)) {
-                User user = userRepository.findById(userId).orElse(null);
-                if (user != null) {
-                    Notification notification = new Notification();
-                    notification.setContent(message);
-                    notification.setUserId(user.getId());
-                    notification.setLocalDateTime(LocalDateTime.now());
-                    notificationRepository.save(notification);
+        Set<String> targetUserIds = comments.stream()
+                .map(Comment::getUserId)
+                .filter(id -> !commentOwner.getId().equals(id) && !ownBlogId.equals(id))
+                .collect(Collectors.toSet());
 
-                    sentUserIds.add(userId);
-                }
-            }
+        List<User> users = userRepository.findAllById(targetUserIds);
+
+        for (User user : users) {
+            Notification notification = new Notification();
+            notification.setContent(message);
+            notification.setUserId(user.getId());
+            notification.setLocalDateTime(LocalDateTime.now());
+            notificationRepository.save(notification);
         }
 
     }
 
     @Override
+    public void delete(String blogId) {
+        List<Notification> notifications = notificationRepository.findAll();
+        for(Notification notification : notifications){
+            List<String> paths = new ArrayList<>(Arrays.asList(notification.getContent().split(" ")));
+            if(paths.get(paths.size() -1).equals(blogId)){
+                notificationRepository.deleteById(notification.getId());
+            }
+        }
+    }
+
+    @Override
     public List<NotificationResponse> getAllNotification(String userId) {
         List<NotificationResponse> notificationResponses = new ArrayList<>();
-        for (Notification notification : notificationRepository.findByuserId(userId))
+        List<Notification> notifications = notificationRepository.findByuserId(userId);
+        Set<String> blogIds = new HashSet<>();
+
+        for (Notification notification : notifications) {
+            List<String> paths = new ArrayList<>(Arrays.asList(notification.getContent().split(" ")));
+            if (!paths.isEmpty()) {
+                blogIds.add(paths.get(paths.size() - 1));
+            }
+        }
+
+        List<Blog> blogs = blogRepository.findAllById(blogIds);
+        Map<String, Blog> blogMap = blogs.stream()
+                .collect(Collectors.toMap(Blog::getId, blog -> blog));
+
+        for (Notification notification : notifications)
         {
+            List<String> paths = new ArrayList<>(Arrays.asList(notification.getContent().split(" ")));
+            String blogId = paths.get(paths.size() - 1);
+            Blog blog = blogMap.get(blogId);
+            if (blog == null) {
+                throw new NotFoundException("Blog is not found with id: " + blogId);
+            }
+
             NotificationResponse notificationResponse = new NotificationResponse();
             notificationResponse.setId(notification.getId());
             notificationResponse.setLocalDateTime(notification.getLocalDateTime());
             notificationResponse.setUserId(notification.getUserId());
-
-            List<String> paths = new ArrayList<>(Arrays.asList(notification.getContent().split(" ")));
-            String content = new String(paths.get(0) + " " + paths.get(1) + " " + paths.get(2) + " " + paths.get(3));
+            String content = String.join(paths.get(0) + " " + paths.get(1) + " " + paths.get(2) + " " + blog.getContent());
             notificationResponse.setContent(content);
 
             notificationResponses.add(notificationResponse);

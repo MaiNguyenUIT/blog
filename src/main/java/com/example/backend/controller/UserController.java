@@ -48,7 +48,7 @@ public class UserController {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/avatar")
     public ResponseEntity<ApiResponse<User>> uploadImage(@RequestParam("avatar") MultipartFile file) throws IOException {
         User user = userService.findUserFromToken();

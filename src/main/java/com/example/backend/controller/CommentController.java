@@ -24,8 +24,9 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
 
-    @PreAuthorize("isAuthenticated()")
+
     @DeleteMapping("/{commentId}")
+    @PreAuthorize("hasRole('ADMIN') || @blogSecurity.isOwner(#blogId)")
     public ResponseEntity<Map<String, String>> deleteComment(@PathVariable String commentId){
         User user = userService.findUserFromToken();
         commentService.deleteComment(commentId, user.getId(), user.getUserRole());

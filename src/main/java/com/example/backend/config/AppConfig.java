@@ -1,5 +1,6 @@
 package com.example.backend.config;
 
+import com.example.backend.exception.CustomAccessDeniedHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import org.mapstruct.BeanMapping;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,12 +30,14 @@ import java.util.Collections;
 public class AppConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAccessDeniedHandler accessDeniedHandler) throws Exception {
         http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(Authorize -> Authorize
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated())
+                .exceptionHandling(ex -> ex
+                        .accessDeniedHandler(accessDeniedHandler))
                 .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
                 .csrf(csrt -> csrt.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()));

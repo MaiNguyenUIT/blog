@@ -17,8 +17,8 @@ import com.example.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CommentService implements com.example.backend.service.CommentService, Subject {
@@ -45,28 +45,33 @@ public class CommentService implements com.example.backend.service.CommentServic
         comment.setUserId(userId);
         commentRepository.save(comment);
 
-        registerUser(notifyService);
-
-        notifyUsers(user.getUsername() + " commented in " + blog.getContent() + " " + blogId);
+        notifyUsers(user.getUsername() + " commented in " + blog.getTitle() + " " + blogId);
         return commentDTO;
     }
 
     @Override
     public List<CommentResponse> getBlogComment(String blogId) {
         List<CommentResponse> commentResponses = new ArrayList<>();
+
+        List<Comment> comments = commentRepository.findByblogId(blogId);
+
+        Set<String> userIds = comments.stream()
+                .map(Comment::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        List<User> users = userRepository.findAllById(userIds);
+        Map<String, String> userIdToUsername = users.stream()
+                .collect(Collectors.toMap(User::getId, User::getUsername));
+
         for(Comment comment : commentRepository.findByblogId(blogId)){
-            User user = userRepository.findById(comment.getUserId()).orElse(null);
-            String userName = "";
-            if(user != null){
-                userName = user.getUsername();
-            } else {
-                userName = "Anonymous";
-            }
+            String userName = userIdToUsername.getOrDefault(comment.getUserId(), "Anonymous");
+
             CommentResponse commentResponse = new CommentResponse();
             commentResponse.setId(comment.getId());
             commentResponse.setContent(comment.getContent());
             commentResponse.setUserName(userName);
-            commentResponse.setCreatedDate(commentResponse.getCreatedDate());
+            commentResponse.setCreatedDate(comment.getCreatedDate());
             commentResponses.add(commentResponse);
         }
 
@@ -77,9 +82,6 @@ public class CommentService implements com.example.backend.service.CommentServic
     public void deleteComment(String commentId, String userId, Role userRole) {
         Comment comment = commentRepository.findById(commentId)
                         .orElseThrow(() -> new NotFoundException("Comment is not exist with id: " + commentId));
-        if(!comment.getUserId().equals(userId) && userRole.equals(Role.ROLE_USER)){
-            throw new BadRequestException("U can not delete other people's comment");
-        }
         commentRepository.deleteById(commentId);
     }
 
@@ -96,6 +98,7 @@ public class CommentService implements com.example.backend.service.CommentServic
 
     @Override
     public void notifyUsers(String message) {
+        registerUser(notifyService);
         for(Observer observer : observers){
             observer.update(message);
         }

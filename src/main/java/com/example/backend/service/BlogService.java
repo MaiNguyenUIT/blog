@@ -15,5 +15,5 @@ public interface BlogService {
     Blog getBlog(String blogId);
     List<Blog> getBlogsSortedByPriority();
     void deleteBlog(String id);
-    void publicBlogs(List<String> blogIds, boolean isPublic);
+    void updateBlogStatus(List<Blog> blogs, String isPublic);
 }
